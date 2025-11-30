@@ -1,0 +1,66 @@
+.assessment-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.assessment-container {
+    width: 100%;
+    max-width: 700px;
+}
+
+.assessment-card {
+    padding: var(--spacing-2xl);
+}
+
+.question-container {
+    margin: var(--spacing-2xl) 0;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.question-number {
+    font-size: var(--font-size-sm);
+    color: var(--color-accent-primary);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.question-text {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-primary);
+    line-height: 1.8;
+    margin-bottom: var(--spacing-xl);
+    font-weight: 400;
+}
+
+.button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: space-between;
+    margin-top: var(--spacing-xl);
+}
+
+.button-group .btn {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .assessment-card {
+        padding: var(--spacing-lg);
+    }
+
+    .question-text {
+        font-size: var(--font-size-lg);
+    }
+
+    .question-container {
+        min-height: 250px;
+    }
+}

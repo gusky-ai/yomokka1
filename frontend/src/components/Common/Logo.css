@@ -1,0 +1,22 @@
+.logo {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.logo-title {
+    font-size: var(--font-size-4xl);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary), var(--color-accent-tertiary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-xs);
+    letter-spacing: 0.05em;
+}
+
+.logo-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: 300;
+    letter-spacing: 0.1em;
+}

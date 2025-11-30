@@ -1,0 +1,358 @@
+# Yomokka（読もっか）実装計画
+
+読書処方箋AI - ユーザーの無意識の行動習慣と悩みを分析し、運命の一冊を処方するWebアプリケーション
+
+## User Review Required
+
+### LLM APIプロバイダーの選択
+
+本物のLLM API統合を行います。バックエンドサービス（Node.js + Express）を構築し、以下のいずれかのプロバイダーと連携します：
+
+> [!IMPORTANT]
+> **選択肢A: OpenAI (GPT-4/GPT-3.5)**
+> - 最も成熟したAPI、豊富なドキュメント
+> - Function callingで書籍選定の制御が容易
+> - APIキー: `OPENAI_API_KEY`
+>
+> **選択肢B: Anthropic (Claude 3)**
+> - 高品質な応答、長文コンテキスト対応
+> - 倫理的な応答生成に優れる
+> - APIキー: `ANTHROPIC_API_KEY`
+>
+> **選択肢C: Google Gemini**
+> - マルチモーダル対応、コストパフォーマンス良好
+> - 日本語の理解に強い
+> - APIキー: `GOOGLE_API_KEY`
+
+**ご質問**: どのLLMプロバイダーを使用しますか？また、APIキーはすでにお持ちですか？（環境変数として[.env](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/.env)ファイルに設定します）
+
+---
+
+## Proposed Changes
+
+### プロジェクト構造
+
+```
+yomokka/
+├── frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── src/
+│   │   ├── main.jsx
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   ├── components/
+│   │   │   ├── Assessment/
+│   │   │   │   ├── QuestionSlider.jsx
+│   │   │   │   ├── ProgressIndicator.jsx
+│   │   │   │   └── AssessmentScreen.jsx
+│   │   │   ├── Chat/
+│   │   │   │   ├── ChatMessage.jsx
+│   │   │   │   ├── ChatInput.jsx
+│   │   │   │   └── ChatScreen.jsx
+│   │   │   ├── Result/
+│   │   │   │   ├── RadarChart.jsx
+│   │   │   │   ├── BookCard.jsx
+│   │   │   │   ├── ShadowButton.jsx
+│   │   │   │   └── ResultScreen.jsx
+│   │   │   └── Common/
+│   │   │       ├── Button.jsx
+│   │   │       └── Logo.jsx
+│   │   ├── data/
+│   │   │   └── questions.js
+│   │   ├── utils/
+│   │   │   ├── personality.js
+│   │   │   └── api.js
+│   │   └── hooks/
+│   │       └── usePersonality.js
+│   └── public/
+└── backend/
+    ├── package.json
+    ├── .env.example
+    ├── server.js
+    ├── routes/
+    │   ├── chat.js
+    │   └── books.js
+    ├── services/
+    │   ├── llm.js
+    │   ├── bookSelector.js
+    │   └── personalityAnalyzer.js
+    └── data/
+        └── books.js
+```
+
+
+---
+
+### Core Components
+
+#### [NEW] [frontend/package.json](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/package.json)
+
+フロントエンドプロジェクト設定（Vite + React + Chart.js）
+
+#### [NEW] [backend/package.json](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/package.json)
+
+バックエンドプロジェクト設定（Express + CORS + LLM SDK）:
+- `express`: Webサーバー
+- `cors`: CORS対応
+- `dotenv`: 環境変数管理
+- LLM SDK: `@google/generative-ai`
+
+#### [NEW] [backend/.env.example](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/.env.example)
+
+環境変数テンプレート（APIキー設定用）
+
+#### [NEW] [frontend/src/index.css](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/index.css)
+
+デザインシステムの基盤：
+- ダークモードカラーパレット（深い青紫基調）
+- グラスモーフィズム効果
+- CSS変数による一貫したテーマ管理
+- アニメーション・トランジション定義
+- レスポンシブブレークポイント
+
+---
+
+### 診断フロー (Assessment)
+
+#### [NEW] [frontend/src/data/questions.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/data/questions.js)
+
+12問の質問データ構造：
+- 各質問にID、テキスト、測定次元（I/E, S/N, T/F, J/P）を含む
+- 仕様書の質問をそのまま実装
+
+#### [NEW] [frontend/src/components/Assessment/AssessmentScreen.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Assessment/AssessmentScreen.jsx)
+
+診断画面の主要コンポーネント：
+- 質問を1つずつ表示（スムーズなトランジション）
+- 5段階スライダー入力
+- 進捗バー表示
+- 回答完了後、性格タイプ判定を実行して次画面へ遷移
+
+---
+
+### 性格判定ロジック (Personality Analysis)
+
+#### [NEW] [frontend/src/utils/personality.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/personality.js)
+
+性格タイプ判定の核心ロジック（フロントエンド）：
+- [calculatePersonality(answers)](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/personality.js#3-27): 12問の回答から4文字タイプ（例: INTJ）を算出
+  - Q1-3合計 → I/E判定
+  - Q4-6合計 → S/N判定
+  - Q7-9合計 → T/F判定
+  - Q10-12合計 → J/P判定
+- [getPersonalityTraits(type)](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/personality.js#28-50): タイプから4軸パラメータ（素材、視点、作用、方向）を数値化
+- `getPoetricName(type)`: 詩的なタイプ名を返す（例: "孤独な戦略家"）
+- [getShadowType(type)](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/personality.js#79-94): 真逆のタイプを返す（例: INTJ → ESFP）
+
+#### [NEW] [backend/services/personalityAnalyzer.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/services/personalityAnalyzer.js)
+
+性格分析サービス（バックエンド）：
+- フロントエンドから受け取ったタイプと特性を検証
+- LLMプロンプト生成用のパーソナリティプロファイル作成
+
+---
+
+### AIチャット画面 (Chat)
+
+#### [NEW] [frontend/src/components/Chat/ChatScreen.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Chat/ChatScreen.jsx)
+
+チャットインターフェース：
+- メッセージ履歴表示（ユーザー/AI）
+- 入力フォーム
+- T型/F型に応じた初期メッセージを表示
+- バックエンドAPI (`/api/chat`) を呼び出して応答を取得
+- ローディング状態の管理
+- 一定のやり取り後、書籍推薦画面へ遷移
+
+#### [NEW] [frontend/src/utils/api.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/api.js)
+
+バックエンドAPI通信ユーティリティ：
+- [sendChatMessage(message, personality, history)](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/api.js#5-37): チャットメッセージ送信
+- [getBookRecommendation(personality, conversationContext)](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/utils/api.js#38-72): 書籍推薦取得
+- エラーハンドリングとリトライロジック
+
+#### [NEW] [backend/routes/chat.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/routes/chat.js)
+
+チャットAPIエンドポイント：
+- `POST /api/chat`: ユーザーメッセージを受け取り、LLMに問い合わせて応答を返す
+- リクエストボディ: `{ message, personalityType, history }`
+
+#### [NEW] [backend/services/llm.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/services/llm.js)
+
+LLM統合サービス：
+- `generateChatResponse(message, personalityType, history)`: 
+  - T型/F型に応じたシステムプロンプトを動的生成
+  - 会話履歴を含めてLLMに送信
+  - ストリーミング対応（オプション）
+- `analyzeUserConcerns(conversationHistory)`: 会話から悩みのタイプを分析
+- プロバイダー固有の実装を抽象化
+
+---
+
+### 書籍推薦エンジン (Book Selection)
+
+#### [NEW] [backend/data/books.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/data/books.js)
+
+実在する名著のデータベース：
+- 各書籍に以下を含む：
+  - タイトル（日本語）
+  - 著者
+  - 4軸パラメータ（素材: Logic/Emotion, 視点: Real/Abstract, 作用: Sedative/Stimulant, 方向: Inward/Outward）
+  - ジャンル（実用 vs 物語）
+  - 処方箋メッセージ（アフォリズム）- LLMが生成
+  - Amazon ASIN/検索URL
+
+**重要**: ハルシネーション防止のため、確実に実在する書籍のみを登録。初期は50-100冊程度の厳選リスト。
+
+#### [NEW] [backend/routes/books.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/routes/books.js)
+
+書籍推薦APIエンドポイント：
+- `POST /api/books/recommend`: 書籍推薦リクエスト
+- リクエストボディ: `{ personalityType, traits, conversationSummary, excludedBooks }`
+
+#### [NEW] [backend/services/bookSelector.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/services/bookSelector.js)
+
+動的書籍選定エンジン：
+- `selectBook(personalityTraits, concernType, conversationContext, excludedBooks)`: 
+  - ユーザーの性格特性（4軸パラメータ）
+  - 悩みのタイプ（LLMが会話から抽出）
+  - 会話コンテキスト
+  を基に、books.jsから最適な1冊を選定
+- 距離計算（ユークリッド距離）で最も近い本を選ぶ
+- LLMを使って処方箋メッセージをパーソナライズ生成
+- 過去の推薦は除外（リテイク時）
+
+---
+
+### 結果画面 (Result)
+
+#### [NEW] [frontend/src/components/Result/ResultScreen.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Result/ResultScreen.jsx)
+
+運命の一冊提示画面：
+- 詩的タイプ名表示
+- レーダーチャート（6角形）
+- 処方箋メッセージ（大きな明朝体フォント）
+- 書籍カード（表紙イメージ、タイトル、著者）
+- アクションボタン:
+  - 「この本を読む」（Amazon）
+  - 「なんか違う」（再相談）
+  - 「影（Shadow）を覗く」
+
+#### [NEW] [frontend/src/components/Result/RadarChart.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Result/RadarChart.jsx)
+
+Chart.jsを使用した6角形レーダーチャート：
+- 6つの軸: 内向性、直感性、論理性、規律性、実用性、独創性（等）
+- ダークモード対応カラースキーム
+- アニメーション効果
+
+#### [NEW] [frontend/src/components/Result/ShadowButton.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Result/ShadowButton.jsx)
+
+「影（Shadow）を覗く」機能：
+- クリックで画面反転エフェクト
+- 真逆のタイプの書籍を表示
+- メッセージ: 「たまには、全く違う人生の景色を見てみませんか？」
+
+---
+
+### 状態管理とルーティング
+
+#### [NEW] [frontend/src/App.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/App.jsx)
+
+メインアプリケーションコンポーネント：
+- 画面遷移管理（Assessment → Chat → Result）
+- グローバル状態管理（React Context or useState）:
+  - assessmentAnswers
+  - personalityType
+  - personalityTraits
+  - chatHistory
+  - selectedBook
+  - isShadowMode
+- 画面間のスムーズなトランジション
+
+---
+
+### UI/UX Details
+
+#### [NEW] [backend/server.js](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/backend/server.js)
+
+Expressサーバーのエントリーポイント：
+- CORS設定
+- ルーティング設定
+- エラーハンドリング
+- ポート: 3001（フロントエンドは5173）
+
+---
+
+### Frontend Components
+
+#### [NEW] [frontend/src/components/Common/Button.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Common/Button.jsx)
+
+再利用可能なボタンコンポーネント：
+- グラスモーフィズムスタイル
+- ホバーエフェクト
+- プライマリ/セカンダリバリエーション
+
+#### [NEW] [frontend/src/components/Common/Logo.jsx](file:///Users/gusky/.gemini/antigravity/scratch/yomokka/frontend/src/components/Common/Logo.jsx)
+
+Yomokkaロゴ：
+- 手書き風/モダンな日本語タイポグラフィ
+- キャッチコピー: 「検索では見つからない、あなたのためだけの一冊。」
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+```bash
+# バックエンド起動
+cd /Users/gusky/.gemini/antigravity/scratch/yomokka/backend
+npm install
+npm start
+
+# 別のターミナルでフロントエンド起動
+cd /Users/gusky/.gemini/antigravity/scratch/yomokka/frontend
+npm install
+npm run dev
+```
+
+- ブラウザで http://localhost:5173 を開き、アプリが起動することを確認
+- バックエンドが http://localhost:3001 で起動していることを確認
+
+### Manual Verification
+
+1. **診断フロー**:
+   - 12問すべて回答できるか
+   - スライダーが滑らかに動作するか
+   - 進捗バーが正しく更新されるか
+
+2. **性格判定**:
+   - 異なる回答パターンで異なるタイプが出るか
+   - 4文字タイプが正しく計算されているか
+
+3. **チャット画面**:
+   - T型/F型で口調が変わるか
+   - 会話がスムーズに進むか
+   - メッセージ入力・表示が正常か
+
+4. **結果画面**:
+   - レーダーチャートが正しく描画されるか
+   - 書籍情報が適切に表示されるか
+   - Amazonリンクが動作するか
+   - Shadowモードが正しく動作するか
+
+5. **UIデザイン**:
+   - ダークモードが美しいか
+   - グラスモーフィズム効果が機能しているか
+   - アニメーションが滑らかか
+   - レスポンシブデザインが機能するか（モバイル/タブレット）
+
+6. **日本語・制約確認**:
+   - すべてのUI要素が日本語で表示されているか
+   - サイト上のどこにも「MBTI」という単語が表示されていないか
+
+7. **リテイク機能**:
+   - 「なんか違う」ボタンからチャットに戻れるか
+   - 別の本が推薦されるか

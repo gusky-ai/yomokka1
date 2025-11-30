@@ -1,0 +1,31 @@
+.chat-input-form {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(var(--glass-blur));
+}
+
+.chat-input-textarea {
+    flex: 1;
+    resize: none;
+    min-height: 60px;
+    font-family: var(--font-sans);
+}
+
+.chat-input-button {
+    align-self: flex-end;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .chat-input-form {
+        flex-direction: column;
+    }
+
+    .chat-input-button {
+        align-self: stretch;
+    }
+}

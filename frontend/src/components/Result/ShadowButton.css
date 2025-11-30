@@ -1,0 +1,43 @@
+.shadow-button {
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--spacing-xs) var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--color-text-secondary);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+}
+
+.shadow-button:hover {
+    background: var(--color-surface);
+    border-color: var(--color-accent-tertiary);
+    color: var(--color-accent-tertiary);
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+}
+
+.shadow-button.active {
+    background: rgba(236, 72, 153, 0.1);
+    border-color: var(--color-accent-tertiary);
+    color: var(--color-accent-tertiary);
+}
+
+.shadow-icon {
+    font-size: 1.2em;
+}
+
+@media (max-width: 768px) {
+    .shadow-button {
+        position: static;
+        margin: 0 auto;
+        margin-top: var(--spacing-lg);
+        width: fit-content;
+    }
+}

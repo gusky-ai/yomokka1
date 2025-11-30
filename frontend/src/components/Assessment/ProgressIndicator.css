@@ -1,0 +1,11 @@
+.progress-indicator {
+    margin-bottom: var(--spacing-lg);
+}
+
+.progress-text {
+    text-align: right;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-xs);
+    font-weight: 600;
+}
