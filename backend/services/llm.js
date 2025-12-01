@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Initialize Gemini API
-const apiKey = 'AIzaSyDJ2ju2u9R5IoRI34Co4kmeItzJ4vOFuCs';
+// Initialize Gemini
+const apiKey = 'process.env.GOOGLE_API_KEY';
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
