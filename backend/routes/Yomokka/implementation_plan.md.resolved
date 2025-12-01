@@ -319,7 +319,7 @@ npm run dev
 ```
 
 - ブラウザで http://localhost:5173 を開き、アプリが起動することを確認
-- バックエンドが http://localhost:3001 で起動していることを確認
+- バックエンドが https://yomokka1.onrender.com で起動していることを確認
 
 ### Manual Verification
 

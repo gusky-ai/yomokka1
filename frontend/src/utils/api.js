@@ -1,6 +1,6 @@
 // バックエンドAPI通信ユーティリティ
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'https://yomokka1.onrender.com';
 
 /**
  * チャットメッセージを送信してAI応答を取得
