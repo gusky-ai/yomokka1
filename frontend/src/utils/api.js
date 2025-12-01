@@ -11,7 +11,7 @@ const API_BASE_URL = 'https://yomokka1.onrender.com';
  */
 export async function sendChatMessage(message, personalityType, history = []) {
     try {
-        const response = await fetch(`${API_BASE_URL}/chat`, {
+        const response = await fetch(`${API_BASE_URL}/api/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -43,9 +43,14 @@ export async function sendChatMessage(message, personalityType, history = []) {
  * @param {Array} excludedBooks - 除外する書籍ID
  * @returns {Promise<Object>} - 推薦書籍データ
  */
-export async function getBookRecommendation(personalityType, traits, conversationSummary, excludedBooks = []) {
+export async function getBookRecommendation(
+    personalityType,
+    traits,
+    conversationSummary,
+    excludedBooks = []
+) {
     try {
-        const response = await fetch(`${API_BASE_URL}/books/recommend`, {
+        const response = await fetch(`${API_BASE_URL}/api/books/recommend`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
